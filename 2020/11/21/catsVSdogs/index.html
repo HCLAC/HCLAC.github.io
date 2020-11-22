@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hclac.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="colab上AI学习。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="人工智能-colab上参考ImageNet上预训练的VGG网络实现猫狗大战">
+<meta property="og:url" content="https://hclac.github.io/2020/11/21/catsVSdogs/index.html">
+<meta property="og:site_name" content="HCLAC个人博客">
+<meta property="og:description" content="colab上AI学习。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://fenggao-image.stor.sinaapp.com/20191006215625.jpg">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/sgd.png">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/adam.png">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/epochs-5.png">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/epochs-30.png">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/yanxishe_error_result.png">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/train.png">
+<meta property="og:image" content="https://hclac.github.io/images/catsVSdogs/yanxishe_result.png">
+<meta property="article:published_time" content="2020-11-20T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-11-22T13:16:45.835Z">
+<meta property="article:author" content="HCLAC">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="VGG">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://fenggao-image.stor.sinaapp.com/20191006215625.jpg">
+
+<link rel="canonical" href="https://hclac.github.io/2020/11/21/catsVSdogs/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>人工智能-colab上参考ImageNet上预训练的VGG网络实现猫狗大战 | HCLAC个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">HCLAC个人博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">天道酬勤</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hclac.github.io/2020/11/21/catsVSdogs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HCLAC">
+      <meta itemprop="description" content="马虎不得、拖延不起、玩耍不起">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HCLAC个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          人工智能-colab上参考ImageNet上预训练的VGG网络实现猫狗大战
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-11-21 00:00:00" itemprop="dateCreated datePublished" datetime="2020-11-21T00:00:00+08:00">2020-11-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-11-22 21:16:45" itemprop="dateModified" datetime="2020-11-22T21:16:45+08:00">2020-11-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/blog/" itemprop="url" rel="index"><span itemprop="name">blog</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">colab上AI学习。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="VGG介绍"><a href="#VGG介绍" class="headerlink" title="VGG介绍"></a>VGG介绍</h2><p><a target="_blank" rel="noopener" href="https://dgschwend.github.io/netscope/#/preset/vgg-16">VGG</a> 是一个卷积神经网络模型，是哈弗 Robotics Institute Visual Geometry Group 组的 Karen Simonyan 和 Andrew Zisserman 在2014年提出的。2014年在最大的图像识别竞赛 ILSVRC 中，这个模型获得第二名，第一名是 GoogleNet，VGG 模型在多个迁移学习任务中好于 GoogleNet。 </p>
+<p>VGG 模型如下图所示，注意该网络由三种元素组成：</p>
+<ul>
+<li>卷积层（CONV）是发现图像中局部的 pattern</li>
+<li>全连接层（FC）是在全局上建立特征的关联</li>
+<li>池化（Pool）是给图像降维以提高特征的 invariance</li>
+</ul>
+<p><img src="http://fenggao-image.stor.sinaapp.com/20191006215625.jpg" alt="VGG"></p>
+<h2 id="猫狗大战"><a href="#猫狗大战" class="headerlink" title="猫狗大战"></a>猫狗大战</h2><p>Kaggle于2013年举办的猫狗大战<a target="_blank" rel="noopener" href="https://www.kaggle.com/tongpython/cat-and-dog">比赛</a>, 判断一张输入图像是“猫”还是“狗”。</p>
+<p>AI研习社猫狗大战赛题：<a target="_blank" rel="noopener" href="https://god.yanxishe.com/41">https://god.yanxishe.com/41</a></p>
+<h3 id="感悟-amp-坑"><a href="#感悟-amp-坑" class="headerlink" title="感悟&amp;坑"></a>感悟&amp;坑</h3><ul>
+<li>学习了利用fine-tune的VGG模型进行测试，设置requires_grad=False，冻结前面层的参数，修改最后一层</li>
+<li>通过修改随机梯度下降函数SGD为Adam,在epochs=5下，精确度有所提升近5个点<br>  <img src="/images/catsVSdogs/sgd.png" alt="SGD"><br>  <img src="/images/catsVSdogs/adam.png" alt="Adam">   </li>
+<li>提高epochs次数也可以提高精确度, epochs由5到30，提升了近两个点<br>  <img src="/images/catsVSdogs/epochs-5.png" alt="Adam"><br>  <img src="/images/catsVSdogs/epochs-30.png" alt="Adam">   </li>
+<li>参考同学的博客，如果训练集更多，也可以提升精确度  </li>
+<li>装载google云盘，把较好的model保存起来方便后面测试使用，把测试图片上去到云盘，方便测试使用。</li>
+</ul>
+<p>坑：</p>
+<ul>
+<li>研习社的结果文件的ID严格按照0-2000排列输出，打乱顺序，结果：<br>  <img src="/images/catsVSdogs/yanxishe_error_result.png" alt="Adam">   </li>
+<li>datasets.ImageFolder函数传入的目录是包含测试图片目录的目录。</li>
+<li>遍历datasets.ImageFolder的结果只有图片和类别信息，没有图片文件名，需要重写：  <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 自定义loadImage类，返回文件名的ID</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ImageFolderWithPaths</span>(<span class="params">datasets.ImageFolder</span>):</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;Custom dataset that includes image file paths. Extends</span></span><br><span class="line"><span class="string">    torchvision.datasets.ImageFolder</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># override the __getitem__ method. this is the method that dataloader calls</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__getitem__</span>(<span class="params">self, index</span>):</span></span><br><span class="line">        <span class="comment"># this is what ImageFolder normally returns </span></span><br><span class="line">        original_tuple = <span class="built_in">super</span>(ImageFolderWithPaths, self).__getitem__(index)</span><br><span class="line">        <span class="comment"># the image file name</span></span><br><span class="line">        name = ntpath.basename(self.imgs[index][<span class="number">0</span>])</span><br><span class="line">        <span class="comment"># make a new tuple that includes original and the file name</span></span><br><span class="line">        tuple_with_name = (original_tuple + (name.split(<span class="string">&#x27;.&#x27;</span>)[<span class="number">0</span>],))</span><br><span class="line">        <span class="keyword">return</span> tuple_with_name</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="步骤-amp-代码"><a href="#步骤-amp-代码" class="headerlink" title="步骤&amp;代码"></a>步骤&amp;代码</h3><p><a target="_blank" rel="noopener" href="https://github.com/HCLAC/BUAA_homework/blob/master/AI/%E7%AC%AC%E5%9B%9B%E6%AC%A1%E4%BD%9C%E4%B8%9A%EF%BC%9A%E7%8C%AB%E7%8B%97%E5%A4%A7%E6%88%98%E6%8C%91%E6%88%98%E8%B5%9B.ipynb">本次教程</a>使用在 ImageNet 上预训练 的 VGG 网络进行测试。因为原网络的分类结果是1000类，所以这里进行迁移学习，对原网络进行 fine-tune （即固定前面若干层，作为特征提取器，只重新训练最后两层）。</p>
+<ol>
+<li><p>标准开头</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 标准开头</span></span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">import</span> torchvision</span><br><span class="line"><span class="keyword">from</span> torchvision <span class="keyword">import</span> models,transforms,datasets</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> ntpath</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定使用google云盘，通过左边操作装载google云盘也可以</span></span><br><span class="line"><span class="comment"># from google.colab import drive</span></span><br><span class="line"><span class="comment"># drive.mount(&#x27;/content/drive&#x27;)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 判断是否存在GPU设备</span></span><br><span class="line">device = torch.device(<span class="string">&quot;cuda:0&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span>)</span><br><span class="line">print(<span class="string">&#x27;Using gpu: %s &#x27;</span> % torch.cuda.is_available())</span><br></pre></td></tr></table></figure></li>
+<li><p>下载数据<br> 因为这个代码需要在colab上跑，速度会相对较慢。因此，我们重新整理了数据，制作了新的数据集，训练集包含1800张图(猫的图片900张，狗的图片900张)，测试集包含2000张图。下载地址为：<a target="_blank" rel="noopener" href="http://fenggao-image.stor.sinaapp.com/dogscats.zip">http://fenggao-image.stor.sinaapp.com/dogscats.zip</a></p>
+<p> <code>AI研习社提供的数据集太大了，解压了好长时间，放弃了，使用老师提供的精简版做训练和验证，效果也阔以，研习社测试集用国鑫同学提供的，感谢！。</code></p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">! wget http://fenggao-image.stor.sinaapp.com/dogscats.<span class="built_in">zip</span></span><br><span class="line">! unzip dogscats.<span class="built_in">zip</span></span><br></pre></td></tr></table></figure></li>
+<li><p>数据处理&amp;创建 VGG Model<br> datasets 是 torchvision 中的一个包，可以用做加载图像数据。它可以以多线程（multi-thread）的形式从硬盘中读取数据，使用 mini-batch 的形式，在网络训练中向 GPU 输送。在使用CNN处理图像时，需要进行预处理。图片将被整理成 $224\times 224 \times 3$ 的大小，同时还将进行归一化处理。</p>
+<p> torchvision 支持对输入数据进行一些复杂的预处理/变换 （normalization, cropping, flipping, jittering 等）。具体可以参照 torchvision.tranforms 的官方文档说明。</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置加载属性</span></span><br><span class="line">normalize = transforms.Normalize(mean=[<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>], std=[<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])</span><br><span class="line"></span><br><span class="line">vgg_format = transforms.Compose([</span><br><span class="line">                transforms.CenterCrop(<span class="number">224</span>),</span><br><span class="line">                transforms.ToTensor(),</span><br><span class="line">                normalize,</span><br><span class="line">            ])</span><br><span class="line"></span><br><span class="line">data_dir = <span class="string">&#x27;./dogscats&#x27;</span></span><br><span class="line"><span class="comment"># 加载猫狗图片</span></span><br><span class="line">dsets = &#123;x: datasets.ImageFolder(os.path.join(data_dir, x), vgg_format)</span><br><span class="line">         <span class="keyword">for</span> x <span class="keyword">in</span> [<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;valid&#x27;</span>]&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 计算训练集和验证集大小</span></span><br><span class="line">dset_sizes = &#123;x: <span class="built_in">len</span>(dsets[x]) <span class="keyword">for</span> x <span class="keyword">in</span> [<span class="string">&#x27;train&#x27;</span>, <span class="string">&#x27;valid&#x27;</span>]&#125;</span><br><span class="line"><span class="comment"># 获取训练集的图片分类</span></span><br><span class="line">dset_classes = dsets[<span class="string">&#x27;train&#x27;</span>].classes</span><br><span class="line"></span><br><span class="line"><span class="comment"># 训练数据</span></span><br><span class="line">loader_train = torch.utils.data.DataLoader(dsets[<span class="string">&#x27;train&#x27;</span>], batch_size=<span class="number">64</span>, shuffle=<span class="literal">True</span>, num_workers=<span class="number">6</span>)</span><br><span class="line"><span class="comment"># 验证数据，后面验证函数使用</span></span><br><span class="line">loader_valid = torch.utils.data.DataLoader(dsets[<span class="string">&#x27;valid&#x27;</span>], batch_size=<span class="number">5</span>, shuffle=<span class="literal">False</span>, num_workers=<span class="number">6</span>)</span><br></pre></td></tr></table></figure>
+<p> torchvision中集成了很多在 ImageNet （120万张训练数据） 上预训练好的通用的CNN模型，可以直接下载使用。我们直接使用预训练好的 VGG 模型。</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">model_vgg = models.vgg16(pretrained=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure></li>
+<li><p>修改 VGG Model<br> 我们的目标是使用预训练好的模型，因此，需要把最后的 nn.Linear 层由1000类，替换为2类。为了在训练中冻结前面层的参数，需要设置 required_grad=False。这样，反向传播训练梯度时，前面层的权重就不会自动更新了。训练中，只会更新最后一层的参数。</p>
+<p> 这里参考国鑫的代码，又加了一层Linear，用Relu激活函数，效果更好，精确度提升了将近3个百分点。</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">model_vgg_new = model_vgg;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> param <span class="keyword">in</span> model_vgg_new.parameters():</span><br><span class="line">    param.requires_grad = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改最后一层，输出两类</span></span><br><span class="line"><span class="comment"># model_vgg_new.classifier._modules[&#x27;6&#x27;] = nn.Linear(4096, 2)</span></span><br><span class="line"><span class="comment"># model_vgg_new.classifier._modules[&#x27;7&#x27;] = torch.nn.LogSoftmax(dim = 1)</span></span><br><span class="line"><span class="comment">#新增两个线性层，后期主要训练这两层</span></span><br><span class="line">model_vgg_new.classifier._modules[<span class="string">&#x27;6&#x27;</span>] = nn.Linear(<span class="number">4096</span>, <span class="number">4096</span>)</span><br><span class="line">model_vgg_new.classifier._modules[<span class="string">&#x27;7&#x27;</span>] = nn.ReLU(inplace=<span class="literal">False</span>)</span><br><span class="line">model_vgg_new.classifier._modules[<span class="string">&#x27;8&#x27;</span>] = nn.Dropout(p=<span class="number">0.5</span>,inplace=<span class="literal">False</span>)</span><br><span class="line">model_vgg_new.classifier._modules[<span class="string">&#x27;9&#x27;</span>] = nn.Linear(<span class="number">4096</span>, <span class="number">2</span>)</span><br><span class="line">model_vgg_new.classifier._modules[<span class="string">&#x27;10&#x27;</span>] = torch.nn.LogSoftmax(dim=<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">model_vgg_new = model_vgg_new.to(device)</span><br></pre></td></tr></table></figure></li>
+<li><p>训练并测试全连接层<br> 包括三个步骤：第1步，创建损失函数和优化器；第2步，训练模型；第3步，测试模型。</p>
+<p> 这里我迭代了30次，随机梯度下降改成了Adam的，并保存最好结果的model到云盘，方便最后测试研习社验证集。</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">第一步：创建损失函数和优化器</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">损失函数 NLLLoss() 的 输入 是一个对数概率向量和一个目标标签. </span></span><br><span class="line"><span class="string">它不会为我们计算对数概率，适合最后一层是log_softmax()的网络. </span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line">criterion = nn.NLLLoss()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 学习率</span></span><br><span class="line">lr = <span class="number">0.001</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 随机梯度下降</span></span><br><span class="line">optimizer_vgg = torch.optim.Adam(model_vgg_new.classifier[<span class="number">6</span>].parameters(),lr = lr)</span><br><span class="line"></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">第二步：训练模型</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">train_model</span>(<span class="params">model,dataloader,size,epochs=<span class="number">1</span>,optimizer=<span class="literal">None</span></span>):</span></span><br><span class="line">    model.train()</span><br><span class="line">    max_acc = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(epochs):</span><br><span class="line">        running_loss = <span class="number">0.0</span></span><br><span class="line">        running_corrects = <span class="number">0</span></span><br><span class="line">        count = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> inputs,classes <span class="keyword">in</span> dataloader:</span><br><span class="line">            inputs = inputs.to(device)</span><br><span class="line">            classes = classes.to(device)</span><br><span class="line">            outputs = model(inputs)</span><br><span class="line">            loss = criterion(outputs,classes)           </span><br><span class="line">            optimizer = optimizer</span><br><span class="line">            optimizer.zero_grad()</span><br><span class="line">            loss.backward()</span><br><span class="line">            optimizer.step()</span><br><span class="line">            _,preds = torch.<span class="built_in">max</span>(outputs.data,<span class="number">1</span>)</span><br><span class="line">            <span class="comment"># statistics</span></span><br><span class="line">            running_loss += loss.data.item()</span><br><span class="line">            running_corrects += torch.<span class="built_in">sum</span>(preds == classes.data)</span><br><span class="line">            count += <span class="built_in">len</span>(inputs)</span><br><span class="line">            print(<span class="string">&#x27;Training: No. &#x27;</span>, count, <span class="string">&#x27; process ... total: &#x27;</span>, size)</span><br><span class="line">        epoch_loss = running_loss / size</span><br><span class="line">        epoch_acc = running_corrects.data.item() / size</span><br><span class="line">        print(<span class="string">&#x27;\nEpoch: &#123;&#125; \tLoss: &#123;:.8f&#125; Acc: &#123;:.8f&#125;&#x27;</span>.<span class="built_in">format</span>(epoch,epoch_loss, epoch_acc))</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 保存最好的结果的model</span></span><br><span class="line">        <span class="keyword">if</span> epoch_acc&gt;max_acc:</span><br><span class="line">            max_acc = epoch_acc</span><br><span class="line">            torch.save(model, <span class="string">&#x27;/content/drive/MyDrive/Colab Notebooks/cats_dogs/best_model.pth&#x27;</span>)</span><br><span class="line">            print(<span class="string">&quot;\n Got A Nice Model Acc:&#123;:.8f&#125;&quot;</span>.<span class="built_in">format</span>(max_acc))</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line"><span class="comment"># 模型训练</span></span><br><span class="line">train_model(model_vgg_new,loader_train,size=dset_sizes[<span class="string">&#x27;train&#x27;</span>], epochs=<span class="number">30</span>, </span><br><span class="line">            optimizer=optimizer_vgg)  </span><br></pre></td></tr></table></figure>
+<p> <img src="/images/catsVSdogs/train.png" alt="train"></p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#模型的具体地址需要根据具体情况修改</span></span><br><span class="line">model_vgg_test = torch.load(<span class="string">r&#x27;/content/drive/MyDrive/Colab Notebooks/cats_dogs/best_model.pth&#x27;</span>)</span><br><span class="line">model_vgg_test = model_vgg_test.to(device)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_model</span>(<span class="params">model,dataloader,size</span>):</span></span><br><span class="line">    model.<span class="built_in">eval</span>()</span><br><span class="line">    predictions = np.zeros(size)</span><br><span class="line">    all_classes = np.zeros(size)</span><br><span class="line">    all_proba = np.zeros((size,<span class="number">2</span>))</span><br><span class="line">    i = <span class="number">0</span></span><br><span class="line">    running_loss = <span class="number">0.0</span></span><br><span class="line">    running_corrects = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> inputs,classes <span class="keyword">in</span> dataloader:</span><br><span class="line">        inputs = inputs.to(device)</span><br><span class="line">        classes = classes.to(device)</span><br><span class="line">        outputs = model(inputs)</span><br><span class="line">        loss = criterion(outputs,classes)           </span><br><span class="line">        _,preds = torch.<span class="built_in">max</span>(outputs.data,<span class="number">1</span>)</span><br><span class="line">        <span class="comment"># statistics</span></span><br><span class="line">        running_loss += loss.data.item()</span><br><span class="line">        running_corrects += torch.<span class="built_in">sum</span>(preds == classes.data)</span><br><span class="line">        predictions[i:i+<span class="built_in">len</span>(classes)] = preds.to(<span class="string">&#x27;cpu&#x27;</span>).numpy()</span><br><span class="line">        all_classes[i:i+<span class="built_in">len</span>(classes)] = classes.to(<span class="string">&#x27;cpu&#x27;</span>).numpy()</span><br><span class="line">        all_proba[i:i+<span class="built_in">len</span>(classes),:] = outputs.data.to(<span class="string">&#x27;cpu&#x27;</span>).numpy()</span><br><span class="line">        i += <span class="built_in">len</span>(classes)</span><br><span class="line">        print(<span class="string">&#x27;Testing: No. &#x27;</span>, i, <span class="string">&#x27; process ... total: &#x27;</span>, size)        </span><br><span class="line">    epoch_loss = running_loss / size</span><br><span class="line">    epoch_acc = running_corrects.data.item() / size</span><br><span class="line">    print(<span class="string">&#x27;Loss: &#123;:.4f&#125; Acc: &#123;:.4f&#125;&#x27;</span>.<span class="built_in">format</span>(</span><br><span class="line">                     epoch_loss, epoch_acc))</span><br><span class="line">    <span class="keyword">return</span> predictions, all_proba, all_classes</span><br><span class="line">  </span><br><span class="line">predictions, all_proba, all_classes = test_model(model_vgg_test,loader_valid,size=dset_sizes[<span class="string">&#x27;valid&#x27;</span>])</span><br><span class="line">  </span><br></pre></td></tr></table></figure></li>
+<li><p>研习社测试集验证</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">!unzip <span class="string">&#x27;/content/drive/MyDrive/Colab Notebooks/cats_dogs/猫狗大战研习社测试集.zip&#x27;</span> -d <span class="string">&#x27;/content/drive/MyDrive/Colab Notebooks/cats_dogs/yanxishe/&#x27;</span> &gt; log.log</span><br></pre></td></tr></table></figure>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 自定义loadImage类，返回文件名的ID</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ImageFolderWithPaths</span>(<span class="params">datasets.ImageFolder</span>):</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;Custom dataset that includes image file paths. Extends</span></span><br><span class="line"><span class="string">    torchvision.datasets.ImageFolder</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># override the __getitem__ method. this is the method that dataloader calls</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__getitem__</span>(<span class="params">self, index</span>):</span></span><br><span class="line">        <span class="comment"># this is what ImageFolder normally returns </span></span><br><span class="line">        original_tuple = <span class="built_in">super</span>(ImageFolderWithPaths, self).__getitem__(index)</span><br><span class="line">        <span class="comment"># the image file name</span></span><br><span class="line">        name = ntpath.basename(self.imgs[index][<span class="number">0</span>])</span><br><span class="line">        <span class="comment"># make a new tuple that includes original and the file name</span></span><br><span class="line">        tuple_with_name = (original_tuple + (name.split(<span class="string">&#x27;.&#x27;</span>)[<span class="number">0</span>],))</span><br><span class="line">        <span class="keyword">return</span> tuple_with_name</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载之前训练好的model</span></span><br><span class="line">model_vgg_test = torch.load(<span class="string">r&#x27;/content/drive/MyDrive/Colab Notebooks/cats_dogs/best_model.pth&#x27;</span>)</span><br><span class="line">model_vgg_test = model_vgg_test.to(device)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置加载测试集图片的参数</span></span><br><span class="line">normalize = transforms.Normalize(mean=[<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>], std=[<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])</span><br><span class="line">vgg_format = transforms.Compose([</span><br><span class="line">                transforms.CenterCrop(<span class="number">224</span>),</span><br><span class="line">                transforms.ToTensor(),</span><br><span class="line">                normalize,</span><br><span class="line">            ])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载测试集</span></span><br><span class="line">dsets_yanxishe = ImageFolderWithPaths(<span class="string">&#x27;/content/drive/MyDrive/Colab Notebooks/cats_dogs/yanxishe/&#x27;</span>, vgg_format)</span><br><span class="line">loader_yanxishe_test = torch.utils.data.DataLoader(dsets_yanxishe, batch_size=<span class="number">5</span>, shuffle=<span class="literal">False</span>, num_workers=<span class="number">6</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建结果文件，输出预测结果到文件</span></span><br><span class="line"><span class="comment"># 读错输出结果：以为1是正确，0是错误，1是dog,0是cat</span></span><br><span class="line"><span class="comment"># 获取图片的ID问题</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_yanxishe</span>(<span class="params">model,dataloader,size</span>):</span></span><br><span class="line">    model.<span class="built_in">eval</span>()</span><br><span class="line">    predictions = np.zeros(size)</span><br><span class="line">    dic = &#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> inputs,_,ids <span class="keyword">in</span> dataloader:</span><br><span class="line">        inputs = inputs.to(device)</span><br><span class="line">        outputs = model(inputs)</span><br><span class="line">        _,preds = torch.<span class="built_in">max</span>(outputs.data,<span class="number">1</span>)    </span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> i, pred <span class="keyword">in</span> <span class="built_in">enumerate</span>(preds.to(<span class="string">&#x27;cpu&#x27;</span>).numpy()):</span><br><span class="line">          dic[<span class="built_in">int</span>(ids[i])] = pred</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 创建结果文件</span></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;result.csv&quot;</span>,<span class="string">&#x27;w&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">2000</span>):</span><br><span class="line">            f.write(<span class="string">&quot;&#123;&#125;,&#123;&#125;\n&quot;</span>.<span class="built_in">format</span>(i, dic[i]))</span><br><span class="line">    print(<span class="string">&#x27;test yanxishe end, check result.csv&#x27;</span>) </span><br><span class="line"></span><br><span class="line">test_yanxishe(model_vgg_test,loader_yanxishe_test,size=<span class="number">2000</span>)</span><br></pre></td></tr></table></figure></li>
+<li><p>研习社结果：<br> <img src="/images/catsVSdogs/yanxishe_result.png">    </p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2></li>
+</ol>
+<ul>
+<li>高峰老师的<a target="_blank" rel="noopener" href="https://github.com/OUCTheoryGroup/colab_demo/blob/master/05_02_CNN_CIFAR10.ipynb">用VGG16进行CIFAR10分类</a> <a target="_blank" rel="noopener" href="https://github.com/OUCTheoryGroup/colab_demo/blob/master/05_04_Transfer_VGG_for_dogs_vs_cats.ipynb">猫狗大战</a> </li>
+<li>李国鑫同学的博客:<a target="_blank" rel="noopener" href="https://liysky.github.io/2020/11/18/DogsVSCats/">https://liysky.github.io/2020/11/18/DogsVSCats/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AI/" rel="tag"># AI</a>
+              <a href="/tags/VGG/" rel="tag"># VGG</a>
+          </div>
+
+        
+
+
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VGG%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">VGG介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8C%AB%E7%8B%97%E5%A4%A7%E6%88%98"><span class="nav-number">2.</span> <span class="nav-text">猫狗大战</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%84%9F%E6%82%9F-amp-%E5%9D%91"><span class="nav-number">2.1.</span> <span class="nav-text">感悟&amp;坑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-amp-%E4%BB%A3%E7%A0%81"><span class="nav-number">2.2.</span> <span class="nav-text">步骤&amp;代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HCLAC</p>
+  <div class="site-description" itemprop="description">马虎不得、拖延不起、玩耍不起</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HCLAC</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
